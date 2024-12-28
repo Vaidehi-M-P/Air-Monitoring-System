@@ -1,0 +1,103 @@
+#include <MQ2.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>//I2C pins declaration
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+//int Analog_Input1 = A0;//mq2
+//int Analog_Input2 = A1;//mq135
+//int Analog_Input3 = A2;//mq7
+int lpg,smoke;
+int redLed = 12;
+int greenLed = 11;
+int buzzer = 10;
+int sensorThres = 350;
+int lpgbuzz = 0;
+MQ2 mq2(A0);
+
+void setup()
+{
+  pinMode(redLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  pinMode(5,INPUT);//LPG
+//  pinMode(D6,OUTPUT);//CO
+  pinMode(A1,INPUT);
+  pinMode(A2,INPUT);
+  lcd.begin(16,2);//Defining 16 columns and 2 rows of lcd display
+  lcd.backlight();
+  lcd.setCursor(1,0);
+  lcd.print("AIR MONITORING");
+  lcd.setCursor(4,1);
+  lcd.print("SYSTEM");
+  delay(5000);
+  lcd.clear();
+  lcd.setCursor(0,0);//LCD
+  lcd.print("LPG SMK ARQ CO"); 
+  Serial.begin(9600);
+  mq2.begin();
+}
+void loop(){
+//lcd.setCursor(0,0);//LCD
+//  lcd.print("LPG SMK CO  ARQ"); 
+
+  
+  int values= mq2.read(true); //LPG
+  lpg = mq2.readLPG();
+  smoke = mq2.readSmoke();
+  lcd.setCursor(0,1);
+  if (lpg>1000 || lpg<0){
+    lcd.print(abs(lpg/100));
+    digitalWrite(buzzer,HIGH);
+    delay(10);
+  }
+  else{lcd.print(abs(lpg));
+   digitalWrite(buzzer,HIGH);
+  }
+  if(lpg == 0){
+    digitalWrite(buzzer,LOW);
+  }
+  Serial.println("lpg");
+  Serial.println(lpg);
+  lcd.print("    ");
+    lcd.setCursor(4,1);
+  if (smoke>1000|| smoke<0){
+    lcd.print(abs(smoke/100));
+  }
+  else{lcd.print(abs(smoke));
+  }
+  Serial.println("smooke");
+  Serial.println(smoke);
+  lcd.print("    ");
+
+
+  
+
+  lcd.setCursor(8,1);
+  int sensorValue1 = analogRead(A1);//ARQ
+  Serial.println(sensorValue1);
+  lcd.print(sensorValue1);
+  lcd.print("    ");
+
+
+  
+
+  lcd.setCursor(12,1);
+  int sensorValue2 = analogRead(A2);//CO
+  Serial.print("CO");
+  Serial.print(sensorValue2, DEC);               
+  lcd.print(sensorValue2,DEC);
+    if (sensorValue2 > 250)
+  {
+    digitalWrite(redLed, HIGH);
+    digitalWrite(greenLed, LOW);
+  
+  }
+  else
+  {
+    digitalWrite(redLed, LOW);
+    digitalWrite(greenLed, HIGH);
+  
+  }
+  lcd.print("    ");
+  delay(500);
+}
